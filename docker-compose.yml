@@ -1,0 +1,222 @@
+version: "3"
+services:
+  strapi:
+    container_name: strapi
+    #build: .
+    image: strapi:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_CLIENT: ${DATABASE_CLIENT}
+      DATABASE_HOST: strapiDB
+      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USERNAME: ${DATABASE_USERNAME}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET}
+      APP_KEYS: ${APP_KEYS}
+      NODE_ENV: ${NODE_ENV}
+    volumes:
+      - ./config:/opt/app/config
+      - ./src:/opt/app/src
+      - ./package.json:/opt/package.json
+      - ./yarn.lock:/opt/yarn.lock
+      - ./.env:/opt/app/.env
+      - ./public/uploads:/opt/app/public/uploads
+    ports:
+      - "1337:1337"
+    networks:
+      - strapi
+      - kafka
+    depends_on:
+      - strapiDB
+
+  strapiDB:
+    container_name: strapiDB
+    platform: linux/amd64 #for platform error on Apple M1 chips
+    restart: unless-stopped
+    env_file: .env
+    image: postgres:12.0-alpine
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    volumes:
+      - strapi-data:/var/lib/postgresql/data/ #using a volume
+      #- ./data:/var/lib/postgresql/data/ # if you want to use a bind folder
+    ports:
+      - "5432:5432"
+    networks:
+      - strapi
+
+  zookeeper:
+    image: wurstmeister/zookeeper:latest
+    container_name: zookeeper
+    ports:
+      - '2181:2181'
+    expose:
+      - '2181'
+    networks:
+      - kafka
+
+  kafka:
+    image: wurstmeister/kafka:2.11-1.1.1
+    container_name: kafka
+    ports:
+      - '9092:9092'
+      - '9093:9093'
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://localhost:9093,OUTSIDE://localhost:9092,
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_DELETE_TOPIC_ENABLE: 'true'
+      KAFKA_ADVERTISED_PORT: 9092
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKAJS_NO_PARTITIONER_WARNING: '1'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_LISTENERS: INSIDE://0.0.0.0:9093,OUTSIDE://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_NO_LISTENER_AUTHENTICATION_PLAINTEXT: 'true'
+      KAFKA_NO_LISTENER_AUTHENTICATION_SSL: 'true'
+      KAFKA_BROKER_ID: 1
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_RETENTION_BYTES: 1073741824
+      KAFKA_LOG_DIRS: /kafka/logs
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - zookeeper
+    networks:
+      - kafka
+      - strapi
+      
+  event-consumer:
+    container_name: event-consumer
+    image: arthurescriou/event-consumer:1.0.0
+    platform: linux/amd64
+    environment:
+      BROKER_1: kafka:9092
+      BROKER_2: kafka:9092
+      BROKER_3: kafka:9092
+      STRAPI_TOKEN: ${STRAPI_TOKEN}
+      STRAPI_URL: http://strapi:1337
+      TOPIC: event
+      BEGINNING: false
+      ERROR_TOPIC: errors
+    networks: 
+      - kafka
+      - strapi
+    depends_on:
+      - kafka
+      - strapi
+
+  product-consumer:
+    container_name: product-consumer
+    image: arthurescriou/product-consumer:1.0.3
+    platform: linux/amd64
+    environment:
+      BROKER_1: kafka:9092
+      BROKER_2: kafka:9092
+      BROKER_3: kafka:9092
+      STRAPI_TOKEN: ${STRAPI_TOKEN}
+      STRAPI_URL: http://strapi:1337
+      TOPIC: product
+      BEGINNING: false
+      ERROR_TOPIC: errors
+    networks: 
+      - kafka
+      - strapi
+    depends_on:
+      - kafka
+      - strapi
+    
+  product-producer:
+    container_name: product-producer
+    image: arthurescriou/product-producer:1.0.0
+    platform: linux/amd64
+    environment:
+      BROKER_1: kafka:9092
+      BROKER_2: kafka:9092
+      BROKER_3: kafka:9092
+      STRAPI_TOKEN: ${STRAPI_TOKEN}
+      STRAPI_URL: http://strapi:1337
+      TOPIC: product
+      ERROR_TOPIC: errors
+      FILE_NAME: /var/lib/products.csv
+    volumes: 
+     - ./products.csv:/var/lib/products.csv
+    networks: 
+     - kafka
+    depends_on:
+      - kafka
+      - strapi
+
+  stock-producer:
+    container_name: stock-producer
+    image: arthurescriou/stock-producer:1.0.1
+    platform: linux/amd64
+    environment:
+      BROKER_1: kafka:9092
+      BROKER_2: kafka:9092
+      BROKER_3: kafka:9092
+      TOPIC: stock
+      FILE_NAME: /var/lib/stocks.csv
+    volumes: 
+     - ./stocks.csv:/var/lib/stocks.csv
+    networks: 
+     - kafka
+    depends_on:
+      - kafka
+      - strapi
+  
+  stock-consumer:
+    container_name: stock-consumer
+    image: arthurescriou/stock-consumer:1.0.0
+    platform: linux/amd64
+    environment:
+      BROKER_1: kafka:9092
+      BROKER_2: kafka:9092
+      BROKER_3: kafka:9092
+      STRAPI_TOKEN: ${STRAPI_TOKEN}
+      STRAPI_URL: http://strapi:1337
+      TOPIC: stock
+      BEGINNING: false
+      ERROR_TOPIC: errors
+    networks: 
+      - kafka
+      - strapi
+    depends_on:
+      - kafka
+      - strapi
+
+  event-producer:
+    container_name: event-producer
+    image: arthurescriou/event-producer:1.0.3
+    platform: linux/amd64
+    environment:
+      BROKER_1: kafka:9092
+      BROKER_2: kafka:9092
+      BROKER_3: kafka:9092
+      TOPIC: event
+      FILE_NAME: /var/lib/events.csv
+      ERROR_TOPIC: errors
+    volumes: 
+      - ./events.csv:/var/lib/events.csv
+    networks: 
+      - kafka
+    depends_on:
+      - kafka
+      - strapi
+      
+volumes:
+  strapi-data:
+
+networks:
+  strapi:
+    name: Strapi
+    driver: bridge
+  
+  kafka:
+    name: kafka
+    driver: bridge
