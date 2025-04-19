@@ -18,12 +18,12 @@ services:
       APP_KEYS: ${APP_KEYS}
       NODE_ENV: ${NODE_ENV}
     volumes:
-      - ./config:/Desktop/yarn/config
-      - ./src:/Desktop/yarn/src
-      - ./package.json:/Desktop/yarn/package.json
-      - ./yarn.lock:/Desktop/yarn/yarn.lock
+      - ./strapi/config:/Desktop/yarn/config
+      - ./strapi/src:/Desktop/yarn/src
+      - ./strapi/package.json:/Desktop/yarn/package.json
+      - ./strapi/yarn.lock:/Desktop/yarn/yarn.lock
       - ./.env:/Desktop/yarn/.env
-      - ./public/uploads:/Desktop/yarn/public/uploads
+      - ./strapi/public/uploads:/Desktop/yarn/public/uploads
     ports:
       - "1337:1337"
     networks:
