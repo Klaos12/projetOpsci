@@ -2,8 +2,8 @@ version: "3"
 services:
   strapi:
     container_name: strapi
-    #build: .
-    image: strapi:latest
+    build: ./strapi
+    image: strapi:latest #arthurescriou/strapi:1.0.0
     restart: unless-stopped
     env_file: .env
     environment:
@@ -18,12 +18,12 @@ services:
       APP_KEYS: ${APP_KEYS}
       NODE_ENV: ${NODE_ENV}
     volumes:
-      - ./config:/opt/app/config
-      - ./src:/opt/app/src
-      - ./package.json:/opt/package.json
-      - ./yarn.lock:/opt/yarn.lock
-      - ./.env:/opt/app/.env
-      - ./public/uploads:/opt/app/public/uploads
+      - ./config:/Desktop/yarn/config
+      - ./src:/Desktop/yarn/src
+      - ./package.json:/Desktop/yarn/package.json
+      - ./yarn.lock:/Desktop/yarn/yarn.lock
+      - ./.env:/Desktop/yarn/.env
+      - ./public/uploads:/Desktop/yarn/public/uploads
     ports:
       - "1337:1337"
     networks:
@@ -94,25 +94,37 @@ services:
       - kafka
       - strapi
 
-  event-consumer:
-    container_name: event-consumer
-    image: arthurescriou/event-consumer:1.0.0
-    platform: linux/amd64
+  react:
+    build: 
+      context: ./frontend
+    container_name: react-frontend
+    restart: always
     environment:
-      BROKER_1: kafka:9092
-      BROKER_2: kafka:9092
-      BROKER_3: kafka:9092
-      STRAPI_TOKEN: ${STRAPI_TOKEN}
-      STRAPI_URL: http://strapi:1337
-      TOPIC: event
-      BEGINNING: false
-      ERROR_TOPIC: errors
-    networks: 
-      - kafka
-      - strapi
+      VITE_API_URL: http://strapi:1337
     depends_on:
-      - kafka
       - strapi
+    ports:
+      - "5173:5173"
+    networks:
+      - strapi
+      
+  event-consumer:
+      container_name: event-consumer
+      image: arthurescriou/event-consumer:1.0.0
+      platform: linux/amd64
+      environment:
+        BROKER_1: kafka:9092
+        BROKER_2: kafka:9092
+        BROKER_3: kafka:9092
+        STRAPI_TOKEN: ${STRAPI_TOKEN}
+        STRAPI_URL: http://strapi:1337
+        TOPIC: event
+        BEGINNING: false
+        ERROR_TOPIC: errors
+      networks: 
+        - kafka
+        - strapi
+
 
   product-consumer:
     container_name: product-consumer
@@ -130,9 +142,6 @@ services:
     networks: 
       - kafka
       - strapi
-    depends_on:
-      - kafka
-      - strapi
     
   product-producer:
     container_name: product-producer
@@ -148,11 +157,8 @@ services:
       ERROR_TOPIC: errors
       FILE_NAME: /var/lib/products.csv
     volumes: 
-     - ./products.csv:/var/lib/products.csv
+      - ./products.csv:/var/lib/products.csv
     networks: 
-     - kafka
-     - strapi
-    depends_on:
       - kafka
       - strapi
 
@@ -167,14 +173,11 @@ services:
       TOPIC: stock
       FILE_NAME: /var/lib/stocks.csv
     volumes: 
-     - ./stocks.csv:/var/lib/stocks.csv
+      - ./stocks.csv:/var/lib/stocks.csv
     networks: 
-     - kafka
-     - strapi
-    depends_on:
       - kafka
       - strapi
-  
+
   stock-consumer:
     container_name: stock-consumer
     image: arthurescriou/stock-consumer:1.0.0
@@ -189,9 +192,6 @@ services:
       BEGINNING: false
       ERROR_TOPIC: errors
     networks: 
-      - kafka
-      - strapi
-    depends_on:
       - kafka
       - strapi
 
@@ -211,16 +211,13 @@ services:
     networks: 
       - kafka
       - strapi
-    depends_on:
-      - kafka
-      - strapi
-      
+
 volumes:
   strapi-data:
 
 networks:
   strapi:
-    name: Strapi
+    name: strapi
     driver: bridge
   
   kafka:
