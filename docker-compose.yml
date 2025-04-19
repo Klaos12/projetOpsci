@@ -157,7 +157,7 @@ services:
       ERROR_TOPIC: errors
       FILE_NAME: /var/lib/products.csv
     volumes: 
-      - ./products.csv:/var/lib/products.csv
+      - ./data/products.csv:/var/lib/products.csv
     networks: 
       - kafka
       - strapi
@@ -173,7 +173,7 @@ services:
       TOPIC: stock
       FILE_NAME: /var/lib/stocks.csv
     volumes: 
-      - ./stocks.csv:/var/lib/stocks.csv
+      - ./data/stocks.csv:/var/lib/stocks.csv
     networks: 
       - kafka
       - strapi
@@ -207,7 +207,7 @@ services:
       FILE_NAME: /var/lib/events.csv
       ERROR_TOPIC: errors
     volumes: 
-      - ./events.csv:/var/lib/events.csv
+      - ./data/events.csv:/var/lib/events.csv
     networks: 
       - kafka
       - strapi
