@@ -6,6 +6,7 @@
 
 ## Présentation du projet
 Ce projet offre une infrastructure complète permettant la création d'une plateforme de gestion de produits à grande échelle comprenant notamment une base de données, un système d'événements et des objets connectés.
+Son déploiement se fait à partir d'images Dockers.
 
 ### Arborescence du projet
 
@@ -48,8 +49,24 @@ Il permet de visualiser depuis le port [localhost:5173](http://localhost:5173) l
 - **L'app Starpi** : http://localhost:1337/admin
 - **Le serveur React** : http://localhost:5173
 
+## 5. Scripts de gestion
 
-## 5. Utilisation
+### `scripts/start.sh`
+```bash
+#!/bin/bash
+echo "Lancement du programme"
+docker compose down
+docker compose up --build -d
+```
+
+### `scripts/stop.sh`
+```bash
+#!/bin/bash
+echo "Arrêt du programme"
+docker compose down
+```
+
+## 6. Utilisation
 
 ### Avant toute chose:
 - Créer un fichier .env à la racine du projet
@@ -79,6 +96,9 @@ STRAPI_TOKEN= ${votre token}
 ### Dans le Frontend
 - Modifier `frontend/src/conf.ts` avec le `TOKEN` issu de l'app Strapi (mode Admin)
 
+### Félicitation, la configuration est fini ! Il ne vous reste qu'à relancer le projet:
+- Restartez le programme à l'aide de la commande `./scripts/start.sh` 
+- Vous pouvez maintenant vous rendre sur le serveur React pour observer l'activité des différents agents implementés.
 
-## 6. Vidéo de démonstration
+## 7. Vidéo de démonstration
 Une vidéo de démonstration du projet est disponible : 
