@@ -2,7 +2,7 @@
 
 ## Developpeur :
 - Deschamps Joseph 3802649
-- Sacko Abdoul-Hakim 
+- Sacko Abdoul-Hakim 21213015
 
 ## Présentation du projet
 Ce projet offre une infrastructure complète permettant la création d'une plateforme de gestion de produits à grande échelle comprenant notamment une base de données, un système d'événements et des objets connectés.
