@@ -15,9 +15,10 @@ Son déploiement se fait à partir d'images Dockers.
 ├── strapi/                     # app Strapi
 |   └──Dockerfile               # Image personnalisée pour Strapi
 ├── frontend/                   # Frontend React
+|   └──Dockerfile               # Création d'une image pour React
 ├── data/                       # Fichiers CSV (products, events, stocks)
-├── docker-compose.yml          # Configuration des services Docker                  
-├── scripts/                    # Scripts de gestion de l’infrastructure
+├── docker-compose.yml          # Configuration des Docker                  
+├── scripts/                    # Scripts de lancement et d'arrêt
 │   ├── start.sh
 │   └── stop.sh
 └── README.md                   
