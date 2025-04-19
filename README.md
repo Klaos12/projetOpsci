@@ -60,11 +60,10 @@ DATABASE_HOST = 127.0.0.1
 DATABASE_PORT= 5432
 DATABASE_NAME= strapi
 DATABASE_USERNAME= ${un username}
-DATABASE_PASSWORD= ${un mot de passe}
-STRAPI_TOKEN= 
+DATABASE_PASSWORD= ${un mot de passe} 
 ```
 
-### lancement du projet
+### Lancement du projet 
 - exécuter /script/start.sh
 - rendez vous sur [localhost:1337](http://localhost:1337) depuis un navigateur où vous trouverez l'app Strapi
   
